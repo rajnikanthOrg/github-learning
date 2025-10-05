@@ -8,7 +8,8 @@
   "oracledevtools.bookmarkFileFolder": "/Users/praveenkumar.muppalla/Oracle/oracle.oracledevtools",
   "oracledevtools.download.otherFolder": "/Users/praveenkumar.muppalla/downloads",
   "oracledevtools.connectionConfiguration.configFilesFolder": "/Users/praveenkumar.muppalla/Oracle/network/admin",
-
+  "editor.wordBasedSuggestions": "currentDocument",
+  "editor.acceptSuggestionOnEnter": "smart",
   "files.associations": {
     ".ado/*.yml": "azure-pipelines",
     "*Template.yml": "azure-pipelines",
@@ -18,21 +19,26 @@
     "*variables*.yml": "azure-pipelines",
     "tasks.yml": "azure-pipelines",
     "*CICD*.yml": "azure-pipelines",
-    // ".github/**/*.yml": "yaml",
-    // ".github/**/*.yaml": "yaml"
-    // (kept commented-out GitHub Actions mappings for reference)
     ".github/**/*.yml": "github-actions-workflow",
     ".github/**/*.yaml": "github-actions-workflow"
   },
 
-  "[oraclesql]": {
-    "editor.suggest.showSnippets": true,
-    "editor.quickSuggestions": { "comments": true, "strings": true, "other": true }
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": [
+      ".github/workflows/*.yml",
+      ".github/workflows/*.yaml"
+    ]
   },
 
-  // You uninstalled GitHub Actions; leaving this setting is harmless but unused.
+  "[oraclesql]": {
+    "editor.suggest.showSnippets": true,
+    "editor.quickSuggestions": {
+      "comments": true,
+      "strings": true,
+      "other": true
+    }
+  },
   "github.actions.inputs.suggestions.enabled": true,
-
   "workbench.editor.languageDetection": false,
   "yaml.disableAdditionalProperties": true,
   "editor.suggestOnTriggerCharacters": true,
@@ -82,10 +88,15 @@
   "azureLogicAppsStandard.parameterizeConnectionsInProjectLoad": true,
   "azureLogicAppsStandard.showDotNetWarning": false,
 
-  "azapi.survey": { "surveyPromptDate": "never", "surveyPromptIgnoredCount": 0 },
+  "azapi.survey": {
+    "surveyPromptDate": "never",
+    "surveyPromptIgnoredCount": 0
+  },
   "workbench.iconTheme": "vscode-icons",
 
-  "mssql.connectionGroups": [{ "name": "ROOT", "id": "694A3438-8364-4007-9286-3E32B73406D9" }],
+  "mssql.connectionGroups": [
+    { "name": "ROOT", "id": "694A3438-8364-4007-9286-3E32B73406D9" }
+  ],
   "mssql.connections": [],
 
   "[shellscript]": {
@@ -99,7 +110,13 @@
 
   "database-client.autoSync": true,
 
-  "pgsql.serverGroups": [{ "name": "Servers", "id": "552B1A9D-012C-468B-B7DB-1E1A82469953", "isDefault": true }],
+  "pgsql.serverGroups": [
+    {
+      "name": "Servers",
+      "id": "552B1A9D-012C-468B-B7DB-1E1A82469953",
+      "isDefault": true
+    }
+  ],
   "pgsql.connections": [
     {
       "id": "A0DC75FD-C968-4A26-849B-0AB77F6872A2",
@@ -124,11 +141,18 @@
     "breadcrumbs.showArrays": true,
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
-    "editor.quickSuggestions": { "other": true, "comments": false, "strings": true },
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
     "editor.autoIndent": "full"
   },
 
-  "azureTerraform.survey": { "surveyPromptDate": "never", "surveyPromptIgnoredCount": 0 },
+  "azureTerraform.survey": {
+    "surveyPromptDate": "never",
+    "surveyPromptIgnoredCount": 0
+  },
   "docker.extension.enableComposeLanguageServer": false,
   "svelte.enable-ts-plugin": true,
   "mssql.autoDisableNonTSqlLanguageService": true,
@@ -138,14 +162,18 @@
   "python.analysis.diagnosticSeverityOverrides": {},
   "python.terminal.activateEnvironment": false,
 
-  "[typescript]": { "editor.defaultFormatter": "vscode.typescript-language-features" },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
   "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
   "[html]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
   "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
 
   "javascript.updateImportsOnFileMove.enabled": "always",
   "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
-  "[javascript]": { "editor.defaultFormatter": "vscode.typescript-language-features" },
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
 
   "@azure.argTenant": "",
   "[python]": { "diffEditor.ignoreTrimWhitespace": true },
@@ -154,13 +182,29 @@
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
     "editor.autoIndent": "advanced",
-    "editor.quickSuggestions": { "other": true, "comments": false, "strings": true },
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
 
   // --- YAML extension behavior for GitHub Workflows ---
-  "yaml.yamlVersion": "1.2",  // lets you write `on:` without quotes
+  "yaml.yamlVersion": "1.2", // lets you write `on:` without quotes
   "[github-actions-workflow]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  }
+    "editor.quickSuggestionsDelay": 10,
+    "editor.suggestOnTriggerCharacters": true,
+    "breadcrumbs.showArrays": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.tabCompletion": "off",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.autoIndent": "full"
+  },
+  "yaml.completion": false
 }

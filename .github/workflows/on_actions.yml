@@ -1,13 +1,9 @@
 name: test-workflow
 run-name: "Run name"
 on:
-  workflow_dispatch:
-    inputs:
-      this-is-a-test-parameter:
-        default: ""
-        description: ""
-        required: false
-        type: string
+  schedule:
+    - cron: 0 0 * * *
+  workflow_dispatch: 
 
 jobs:
   test:
