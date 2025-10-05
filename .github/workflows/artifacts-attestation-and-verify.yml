@@ -107,4 +107,4 @@ jobs:
           gh attestation verify ./verify/manifest.txt \
             --repo "${GITHUB_REPOSITORY}" \
             --signer-workflow ".github/workflows/artifacts-attestation-and-verify.yml" \
-            --cert-oidc-issuer "https://token.actions.githubusercontent.com"
+            --cert-oidc-issuer "https://oidc.sigstore.dev"
