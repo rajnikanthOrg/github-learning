@@ -1,6 +1,19 @@
-name: Runs on cronjob
-
+name: test-workflow
+run-name: "Run name"
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
     inputs:
-      
+      this-is-a-test-parameter:
+        default: ""
+        description: ""
+        required: false
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Script
+        run: ls
+        shell: bash
