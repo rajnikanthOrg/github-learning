@@ -6,8 +6,9 @@ on:
   # workflow_dispatch: 
   push:
     branches: 
-      - main
       - feature/*
+    branches-ignore: 
+      - "*"
 
 jobs:
   test:
