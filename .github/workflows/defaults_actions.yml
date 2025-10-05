@@ -1,6 +1,8 @@
 name: defaults-example
 on:
-  workflow_dispatch: {}
+  push: 
+    branches: 
+      - main
 
 permissions:
   contents: read
@@ -24,4 +26,4 @@ jobs:
 
       - name: Show environment
         run: |
-          echo 'Environment: $APP_ENV'
+          echo "Environment: $APP_ENV"
