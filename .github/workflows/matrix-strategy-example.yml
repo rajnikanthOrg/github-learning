@@ -1,0 +1,72 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/matrix-strategy-example.yml
+#
+# Workflow Name: matrix-strategy-example
+#
+# Description:
+# This workflow demonstrates how to use the "strategy.matrix" feature in GitHub Actions.
+# A matrix strategy allows you to run the same job multiple times with different configurations.
+# Each matrix combination runs in parallel on separate runners.
+#
+# Purpose:
+# - To automate testing or builds across multiple environments, languages, or versions.
+# - To reduce duplication by defining variable parameters once.
+# - To improve workflow efficiency by running independent jobs concurrently.
+#
+# Key Concepts:
+#
+# 1. strategy:
+#      - Defines a build or test matrix to run multiple configurations.
+#      - Contains the "matrix" key which defines variables to iterate over.
+#
+# 2. matrix:
+#      - Defines one or more parameters with lists of possible values.
+#      - Each unique combination of matrix parameters spawns a separate job.
+#      - Example parameters: os, node-version, python-version, environment, etc.
+#
+# 3. include:
+#      - Used to add specific extra configurations to the matrix that are not covered
+#        by the main parameter combinations.
+#
+# 4. exclude:
+#      - Used to skip particular combinations that are invalid or unnecessary.
+#
+# 5. matrix context:
+#      - Values are referenced using syntax like ${{ matrix.os }} or ${{ matrix.node-version }}.
+#
+# Usage:
+# - Run this workflow manually.
+# - Observe how GitHub Actions creates multiple parallel jobs for each matrix combination.
+#
+# ----------------------------------------------------------------------------------------
+
+name: matrix-strategy-example
+
+on:
+  workflow_dispatch:          # Manual trigger for testing matrix behavior
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}   # Runner type comes from the matrix variable
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: [18, 20]
+        include:
+          - os: ubuntu-latest
+            node-version: 22
+            extra-config: "experimental"
+        exclude:
+          - os: windows-latest
+            node-version: 18
+
+    steps:
+      - name: Display build info
+        run: |
+          echo "Operating System: ${{ matrix.os }}"
+          echo "Node.js Version: ${{ matrix.node-version }}"
+          echo "Extra Config: ${{ matrix.extra-config || 'none' }}"
