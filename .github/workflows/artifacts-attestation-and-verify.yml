@@ -84,11 +84,8 @@ jobs:
     name: Verify attestation with GitHub CLI
     needs: build-and-attest
     runs-on: ubuntu-latest
-
-    # Provide gh CLI with an auth token for repository access
     env:
       GH_TOKEN: ${{ github.token }}
-
     steps:
       - name: Download artifact produced earlier (optional)
         uses: actions/download-artifact@v4
@@ -102,10 +99,12 @@ jobs:
       - name: Verify attestation using gh CLI (repo-level identity)
         run: |
           gh attestation verify ./verify/manifest.txt \
-            --repo "${GITHUB_REPOSITORY}"
+            --repo "${GITHUB_REPOSITORY}" \
+            --cert-oidc-issuer "https://token.actions.githubusercontent.com"
 
-      - name: Verify attestation pinning the signer workflow (stronger)
+      - name: Verify attestation (also pin signer workflow)
         run: |
           gh attestation verify ./verify/manifest.txt \
             --repo "${GITHUB_REPOSITORY}" \
-            --signer-workflow ".github/workflows/artifacts-attestation-and-verify.yml"
+            --signer-workflow ".github/workflows/artifacts-attestation-and-verify.yml" \
+            --cert-oidc-issuer "https://token.actions.githubusercontent.com"
