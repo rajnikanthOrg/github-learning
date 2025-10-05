@@ -1,0 +1,8 @@
+name: Runs on cronjob
+
+on:
+  workflow_dispatch:
+    inputs:
+    
+
+jobs:
