@@ -101,10 +101,3 @@ jobs:
           gh attestation verify ./verify/manifest.txt \
             --repo "${GITHUB_REPOSITORY}" \
             --cert-oidc-issuer "https://token.actions.githubusercontent.com"
-
-      - name: Verify attestation (also pin signer workflow)
-        run: |
-          gh attestation verify ./verify/manifest.txt \
-            --repo "${GITHUB_REPOSITORY}" \
-            --signer-workflow ".github/workflows/artifacts-attestation-and-verify.yml" \
-            --cert-oidc-issuer "https://oidc.sigstore.dev"
