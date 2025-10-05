@@ -1,0 +1,49 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/call-reusable-workflow.yml
+#
+# Workflow Name: call-reusable-workflow
+#
+# Description:
+# Demonstrates how to invoke a reusable workflow within the same repository.
+#
+# Purpose:
+# - Call a standardized build workflow (defined separately).
+# - Pass custom inputs and secrets to the reusable workflow.
+#
+# Key Concepts:
+# 1) jobs.<job_id>.uses:
+#      - References another workflow file.
+#      - Format for same repo:  ./.github/workflows/<filename>.yml
+#      - Format for external repo:  <owner>/<repo>/.github/workflows/<filename>@<ref>
+#
+# 2) with:
+#      - Sends input values defined in the reusable workflow’s "on.workflow_call.inputs".
+#
+# 3) secrets:
+#      - Forwards secrets explicitly to the reusable workflow.
+#
+# Usage:
+# - Run manually or on push to main.
+# - Observe that it triggers the reusable workflow defined in reusable-build.yml.
+#
+# ----------------------------------------------------------------------------------------
+
+name: call-reusable-workflow
+
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - main 
+
+permissions:
+  contents: read
+
+jobs:
+  invoke-shared-build:
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      node-version: "18"
+      build-command: "npm run custom-build"
+    secrets:
+      npm_token: ${{ secrets.NPM_AUTH_TOKEN }}
