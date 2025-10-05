@@ -1,0 +1,106 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/job-dependencies-and-outputs-example.yml
+#
+# Workflow Name: job-dependencies-and-outputs-example
+#
+# Description:
+# This workflow demonstrates how to:
+#   1) Control execution order between jobs using the "needs" keyword.
+#   2) Produce outputs from steps and expose them as job-level outputs.
+#   3) Consume job outputs in downstream jobs.
+#
+# Purpose:
+# - Build multi-stage pipelines where later jobs depend on artifacts or data produced earlier.
+# - Ensure jobs run in a specific order (e.g., build -> test -> deploy).
+# - Pass computed values (e.g., build numbers, artifact paths, version strings) across jobs.
+#
+# Key Concepts:
+# 1. needs:
+#      - Declares explicit job dependencies.
+#      - A job will not start until all jobs it "needs" have completed successfully.
+#
+# 2. Step outputs:
+#      - A step can set outputs via the special file path in GITHUB_OUTPUT.
+#        Example in a run step:
+#          echo "key=value" >> "$GITHUB_OUTPUT"
+#      - The step must have an "id" to reference its outputs.
+#
+# 3. Job outputs:
+#      - The job's "outputs" map can expose one or more step outputs at the job level:
+#          outputs:
+#            my_output: ${{ steps.<step_id>.outputs.<key> }}
+#      - Downstream jobs access these as:
+#          ${{ needs.<job_id>.outputs.<my_output> }}
+#
+# Usage:
+# - Trigger this workflow manually.
+# - Observe the execution order: "build" -> "test" -> "deploy".
+# - Note how the "version" value is produced in "build", validated in "test",
+#   and then used in "deploy".
+#
+# ----------------------------------------------------------------------------------------
+
+name: job-dependencies-and-outputs-example
+
+on:
+  workflow_dispatch:          # Manual trigger for demonstration
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Expose selected step outputs at the job level
+    outputs:
+      version: ${{ steps.gen.outputs.version }}
+      artifact_path: ${{ steps.pack.outputs.path }}
+
+    steps:
+
+      # Generate a version string and publish it as a step output
+      - name: Generate version
+        id: gen
+        run: |
+          VERSION="1.0.$(date -u +%Y%m%d%H%M%S)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # Simulate creating an artifact and publish its path as a step output
+      - name: Package artifact
+        id: pack
+        run: |
+          mkdir -p dist
+          echo "example content" > dist/app.txt
+          echo "path=dist" >> "$GITHUB_OUTPUT"
+
+  test:
+    # Wait for "build" to complete and gain access to its outputs
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show inputs from build job
+        run: |
+          echo "Version from build: ${{ needs.build.outputs.version }}"
+          echo "Artifact path from build: ${{ needs.build.outputs.artifact_path }}"
+
+      - name: Validate version format
+        run: |
+          VERSION='${{ needs.build.outputs.version }}'
+          if [[ ! "$VERSION" =~ ^1\.0\.[0-9]{14}$ ]]; then
+            echo "Invalid version format: $VERSION"
+            exit 1
+          fi
+          echo "Version format is valid."
+
+  deploy:
+    # This job depends on both "build" and "test"
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use build outputs during deployment
+        run: |
+          echo "Deploying version: ${{ needs.build.outputs.version }}"
+          echo "Using artifact directory: ${{ needs.build.outputs.artifact_path }}"
+          # Insert real deployment commands here (e.g., uploading artifacts, calling CD tools)
