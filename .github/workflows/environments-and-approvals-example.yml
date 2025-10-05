@@ -1,0 +1,149 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/environments-and-approvals-example.yml
+#
+# Workflow Name: environments-and-approvals-example
+#
+# Description:
+# Demonstrates how to:
+#   1) Use GitHub Environments (e.g., "staging", "production") in jobs.
+#   2) Consume environment-scoped secrets and variables during a job.
+#   3) Gate deployments with protection rules and required reviewers (manual approvals).
+#   4) Publish a deployment URL via the job's environment metadata.
+#
+# Purpose:
+# - Separate concerns between non-production and production workflows.
+# - Require human approval for sensitive environments (using environment protection rules).
+# - Keep secrets restricted so only jobs targeting a specific environment can access them.
+#
+# Key Concepts:
+# 1) Environments (Settings > Environments):
+#    - Define named environments like "staging" or "production".
+#    - Each environment can have:
+#        a) Secrets (visible only to jobs that target that environment).
+#        b) Variables (non-secret values).
+#        c) Protection rules (required reviewers, wait timers, branch restrictions).
+#
+# 2) Jobs with `environment`:
+#    - `environment.name`: selects which environment the job targets.
+#    - `environment.url` : optional URL shown in the run's "Environment" section (e.g., deployed site).
+#    - If the environment has required reviewers, the job will pause until approved in the UI.
+#
+# 3) Environment-scoped secrets and variables:
+#    - Define them under the chosen environment in repository settings.
+#    - Access secrets via:  ${{ secrets.MY_ENV_SECRET }}
+#    - Access vars via:     ${{ vars.MY_ENV_VAR }}
+#
+# Usage:
+# - Create environments in your repository settings:
+#     a) "staging"   (no approvals required; optionally add secrets/vars)
+#     b) "production" (add required reviewers; add secrets/vars)
+# - Optionally create these items:
+#     - Staging secrets:    STAGING_API_TOKEN
+#     - Staging variables:  STAGING_BASE_URL
+#     - Production secrets: PROD_API_TOKEN
+#     - Production variables: PROD_BASE_URL
+# - Manually trigger the workflow. The staging job runs automatically.
+#   The production job will wait for approval if protection rules are configured.
+#
+# Notes:
+# - This example is safe to run without app code. It uses echo commands and simulated deploys.
+# - Avoid echoing secret values to logs. The examples only check presence or use them in guarded commands.
+#
+# ----------------------------------------------------------------------------------------
+
+name: environments-and-approvals-example
+
+on:
+  workflow_dispatch:            # Manual trigger for demonstration
+
+permissions:
+  contents: read
+  # No special permissions are required for approvals. If you later add cloud logins,
+  # you may need id-token: write or other scopes.
+
+jobs:
+  build:
+    name: Build (no environment)
+    runs-on: ubuntu-latest
+    outputs:
+      preview_url: ${{ steps.make_preview.outputs.url }}
+    steps:
+      - name: Checkout (optional)
+        uses: actions/checkout@v4
+
+      - name: Simulate build
+        run: |
+          echo "Building the project..."
+          mkdir -p dist && echo "preview artifact" > dist/index.html
+
+      # Produce a dynamic preview URL (for demonstration purposes)
+      - name: Create preview URL
+        id: make_preview
+        run: |
+          URL="https://preview.example.invalid/run-${GITHUB_RUN_ID}"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+  deploy_staging:
+    name: Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+
+    # Target the "staging" environment. This grants access to its env secrets/vars.
+    environment:
+      name: staging
+      url: ${{ needs.build.outputs.preview_url }}
+
+    steps:
+      - name: Checkout (optional)
+        uses: actions/checkout@v4
+
+      - name: Show environment metadata
+        run: |
+          echo "Environment: staging"
+          echo "Preview URL: ${{ needs.build.outputs.preview_url }}"
+
+      - name: Use environment-scoped values (no secrets printed)
+        run: |
+          # Example of presence checks (do not echo real secret values)
+          if [ -n "${{ secrets.STAGING_API_TOKEN }}" ]; then
+            echo "Staging token is present."
+          else
+            echo "Staging token is NOT set."
+          fi
+
+          echo "Staging base URL: ${{ vars.STAGING_BASE_URL || 'not defined' }}"
+
+      - name: Simulate staging deploy
+        run: |
+          echo "Deploying build artifacts to staging..."
+          echo "Done."
+
+  deploy_production:
+    name: Deploy to Production (requires approval if configured)
+    needs: [build, deploy_staging]
+    runs-on: ubuntu-latest
+
+    # Target the "production" environment. If you configure required reviewers on this
+    # environment, this job will pause until someone approves the deployment.
+    environment:
+      name: production
+      url: ${{ vars.PROD_BASE_URL || 'https://prod.example.invalid' }}
+
+    steps:
+      - name: Checkout (optional)
+        uses: actions/checkout@v4
+
+      - name: Use environment-scoped values (no secrets printed)
+        run: |
+          if [ -n "${{ secrets.PROD_API_TOKEN }}" ]; then
+            echo "Production token is present."
+          else
+            echo "Production token is NOT set."
+          fi
+
+          echo "Production base URL: ${{ vars.PROD_BASE_URL || 'not defined' }}"
+
+      - name: Simulate production deploy
+        run: |
+          echo "Deploying to production..."
+          echo "Done."
