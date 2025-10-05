@@ -43,6 +43,8 @@ jobs:
       - name: Call composite action
         id: hello
         uses: ./.github/actions/hello-composite
+        # uses: owner/repo/path/to/action@ref
+        # uses: my-org/actions/.github/actions/hello-composite@v1.0
         with:
           name: "GitHub Actions Student"
           show-date: "true"
