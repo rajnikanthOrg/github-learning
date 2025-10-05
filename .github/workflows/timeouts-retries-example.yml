@@ -1,0 +1,110 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/timeouts-retries-example.yml
+#
+# Workflow Name: timeouts-retries-example
+#
+# Description:
+# Demonstrates controlling job and step execution behavior with:
+#   1) timeouts:           Fail a job/step if it exceeds a time limit.
+#   2) retry-on (re-run):  Implement simple retries using shell loops (since Actions does not
+#                          have a native "retries" key for steps).
+#   3) continue-on-error:  Allow a step (or entire job) to fail without failing the workflow.
+#
+# Purpose:
+# - Prevent runaway jobs with hard time limits.
+# - Add resilient retries around flaky commands (e.g., network calls).
+# - Mark non-critical steps as non-blocking.
+#
+# Key Concepts:
+# 1) job-level timeout-minutes:
+#    - Applies to the entire job. When reached, the job is cancelled and marked failed.
+#
+# 2) step-level timeout-minutes:
+#    - Applies to an individual step. Other steps may still run (depending on outcome).
+#
+# 3) continue-on-error:
+#    - When set on a step: the step may fail but the job continues.
+#    - When set on a job: any step failure will not fail the job (use sparingly).
+#
+# 4) Manual retries:
+#    - Wrap commands in a loop with sleep backoff and exit appropriately on final failure.
+#
+# Usage:
+# - Trigger manually and inspect logs to see timeouts and retry behavior.
+#
+# ----------------------------------------------------------------------------------------
+
+name: timeouts-retries-example
+
+on:
+  workflow_dispatch:            # Manual trigger for learning/testing
+
+permissions:
+  contents: read
+
+jobs:
+  resilient-job:
+    runs-on: ubuntu-latest
+
+    # Hard cap: cancel the entire job if it runs longer than 10 minutes
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout (optional)
+        uses: actions/checkout@v4
+
+      # Step-level timeout: this step will be killed if it exceeds 1 minute
+      - name: Step with 1-minute timeout
+        timeout-minutes: 1
+        run: |
+          echo "Simulating short task with enforced cap..."
+          sleep 30
+          echo "Completed within 1 minute."
+
+      # Example: continue even if a non-critical command fails
+      - name: Non-critical check (allowed to fail)
+        continue-on-error: true
+        run: |
+          echo "Attempting a non-critical operation that might fail..."
+          false   # simulate failure
+          echo "This line is not executed, but the job continues due to continue-on-error."
+
+      # Implement simple retries around a flaky command (e.g., curl)
+      - name: Retry pattern with backoff
+        run: |
+          set -euo pipefail
+          max_attempts=5
+          delay=3
+          for attempt in $(seq 1 "$max_attempts"); do
+            echo "Attempt $attempt/$max_attempts..."
+            # Replace the following command with your real command (e.g., curl)
+            if true; then
+              echo "Simulated success."
+              break
+            fi
+            echo "Attempt $attempt failed; retrying in ${delay}s..."
+            sleep "$delay"
+            delay=$(( delay * 2 ))  # exponential backoff
+            if [ "$attempt" -eq "$max_attempts" ]; then
+              echo "All attempts failed."
+              exit 1
+            fi
+          done
+
+      # Demonstrate that a failing step without continue-on-error will fail the job (commented)
+      # - name: Strict step (will fail job)
+      #   run: exit 1
+
+  soft-fail-job:
+    runs-on: ubuntu-latest
+
+    # Allow this entire job to be marked successful even if steps fail (use sparingly)
+    continue-on-error: true
+    timeout-minutes: 5
+
+    steps:
+      - name: Demonstrate soft-fail job
+        run: |
+          echo "This job is configured with continue-on-error at the job level."
+          echo "Even if this command fails, the job won't fail the workflow."
+          false || echo "Simulated failure tolerated."
