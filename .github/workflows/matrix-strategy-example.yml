@@ -56,10 +56,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         node-version: [18, 20]
-        # include:
-        #   - os: ubuntu-latest
-        #     node-version: 22
-        #     extra-config: "experimental"
+        include:
+          - os: ubuntu-latest
+            node-version: 22
+            extra-config: "experimental"
         exclude:
           - os: windows-latest
             node-version: 18
