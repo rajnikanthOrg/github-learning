@@ -51,7 +51,8 @@ permissions:
 
 env:
   DEPLOY_ENV: "dev"
-  SHOULD_RUN: "true"
+  # SHOULD_RUN: "true"
+  SHOULD_RUN: "false"
 
 jobs:
   conditional-demo:
