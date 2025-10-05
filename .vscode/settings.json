@@ -45,11 +45,7 @@
     "editor.defaultFormatter": "DotJoshJohnson.xml"
   },
   "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml",
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true,
-    "editor.detectIndentation": false,
-    "editor.autoIndent": "advanced"
+    "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
@@ -171,11 +167,7 @@
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "[github-actions-workflow]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.insertSpaces": true,
-    "editor.tabSize": 2,
-    "editor.detectIndentation": false,
-    "editor.autoIndent": "advanced"
+    "editor.defaultFormatter": "redhat.vscode-yaml"
   },
   "files.associations": {
     ".ado/*.yml": "azure-pipelines",

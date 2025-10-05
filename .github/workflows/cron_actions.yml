@@ -1,8 +1,6 @@
 name: Runs on cronjob
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: 
     inputs:
-    
-
-jobs:
+      
