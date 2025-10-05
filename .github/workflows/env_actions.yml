@@ -7,7 +7,7 @@ on:
       - main
       - "feature/*"
     paths:          # Optional: trigger only if specific paths change
-      - ".github/**"
+      - ".github/**/env_actions.yml"
 
 # Define the default permissions for all jobs in this workflow
 permissions:
