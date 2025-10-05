@@ -1,6 +1,6 @@
 name: defaults-example
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read

@@ -1,24 +1,24 @@
-# name: permissions_actions
-# run-name: "Run name"
 
-# on: 
-#   push: 
-#     branches: 
-#       - main
 
-# # Define the default permissions for all jobs in this workflow
-# permissions:
-#   contents: read           # Allows reading repository contents (e.g., checkout)
-#   actions: read            # Allows using GitHub Actions metadata
-#   id-token: write          # Required if you use OpenID Connect (for cloud auth)
-#   issues: none             # Disables access to GitHub issues API
-#   pull-requests: none      # Disables PR write access for extra security
+name: permissions_actions
+run-name: "Run name"
 
-# jobs:
-#   test:
-#     runs-on: ubuntu-latest   # Run the job on the latest Ubuntu runner
+on:
+  workflow_dispatch: {}
 
-#     steps:
-#       # Step 1: Checkout the repository
-#       - name: Checkout repository
-#         uses: actions/checkout@v4
+# Define the default permissions for all jobs in this workflow
+permissions:
+  contents: read           # Allows reading repository contents (e.g., checkout)
+  actions: read            # Allows using GitHub Actions metadata
+  id-token: write          # Required if you use OpenID Connect (for cloud auth)
+  issues: none             # Disables access to GitHub issues API
+  pull-requests: none      # Disables PR write access for extra security
+
+jobs:
+  test:
+    runs-on: ubuntu-latest   # Run the job on the latest Ubuntu runner
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
