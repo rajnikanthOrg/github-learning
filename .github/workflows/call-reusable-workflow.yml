@@ -42,6 +42,7 @@ permissions:
 jobs:
   invoke-shared-build:
     uses: ./.github/workflows/reusable-build.yml
+    # uses: owner/repo/.github/workflows/reusable-build.yml@release/v1.0
     with:
       node-version: "18"
       build-command: "npm run custom-build"
