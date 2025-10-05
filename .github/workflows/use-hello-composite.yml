@@ -1,0 +1,52 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/use-hello-composite.yml
+#
+# Workflow Name: use-hello-composite
+#
+# Description:
+# Demonstrates how to call a composite action defined in the same repository.
+#
+# Purpose:
+# - Show end-to-end usage of a custom action placed under .github/actions/<name>.
+# - Capture and use the action's outputs inside the workflow.
+#
+# Key Concepts:
+# 1) uses: ./.github/actions/<action-folder>
+#    - Local path reference to a composite action within the same repo.
+# 2) with:
+#    - Passes input values to the action.
+# 3) Outputs:
+#    - Access an action step's outputs via "steps.<id>.outputs.<name>".
+#
+# Usage:
+# - Commit both this workflow and the composite action file to your default branch.
+# - Trigger the workflow manually and observe the logs.
+#
+# ----------------------------------------------------------------------------------------
+
+name: use-hello-composite
+
+on:
+  workflow_dispatch:            # Manual trigger for learning/testing
+
+permissions:
+  contents: read
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Call composite action
+        id: hello
+        uses: ./.github/actions/hello-composite
+        with:
+          name: "GitHub Actions Student"
+          show-date: "true"
+
+      - name: Use the action output
+        run: |
+          echo "Action output greeting: ${{ steps.hello.outputs.greeting }}"

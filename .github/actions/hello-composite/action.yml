@@ -1,0 +1,58 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/actions/hello-composite/action.yml
+#
+# Action Name: hello-composite
+#
+# Description:
+# A simple composite action that:
+#   1) Greets a user.
+#   2) Optionally prints the current date in UTC.
+#   3) Writes an output called "greeting".
+#
+# Purpose:
+# - Demonstrate how to package multiple shell steps into a reusable "composite" action.
+# - Encourage DRY practices when several workflows need the same small sequence of steps.
+#
+# Key Concepts:
+# 1) Composite actions live in the repository (often under .github/actions/<name>).
+# 2) They define "inputs" and "outputs" and a "runs" section with steps.
+# 3) They can be referenced in workflows with "uses: ./.github/actions/<name>".
+#
+# Usage:
+# - See the companion workflow file that calls this action.
+#
+# ----------------------------------------------------------------------------------------
+
+name: "hello-composite"
+description: "Greets a user and optionally prints the date"
+inputs:
+  name:
+    description: "Name to greet"
+    required: false
+    default: "Learner"
+  show-date:
+    description: "Whether to print the current UTC date (true/false)"
+    required: false
+    default: "true"
+outputs:
+  greeting:
+    description: "Composed greeting text"
+runs:
+  using: "composite"
+  steps:
+    - id: make-greeting
+      shell: bash
+      run: |
+        NAME="${{ inputs.name }}"
+        GREETING="Hello, ${NAME}!"
+        echo "greeting=${GREETING}" >> "$GITHUB_OUTPUT"
+        echo "Greeting prepared."
+
+    - if: ${{ inputs.show-date == 'true' }}
+      shell: bash
+      run: |
+        echo "UTC date: $(date -u +'%Y-%m-%d %H:%M:%S')"
+
+    - shell: bash
+      run: |
+        echo "Composite action complete."
