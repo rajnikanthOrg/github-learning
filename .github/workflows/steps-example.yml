@@ -73,6 +73,7 @@ jobs:
         run: |
           echo "Listing files in the repository root:"
           ls -la
+          exit 1 # comment this line to make this success
 
       # Step 4: Conditional step
       - name: Run only on success
