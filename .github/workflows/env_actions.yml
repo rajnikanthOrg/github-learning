@@ -25,7 +25,8 @@ env:                       # Global environment variables
 jobs:
   test:
     runs-on: ubuntu-latest   # Run the job on the latest Ubuntu runner
-
+    env:
+      JOB_ONLY_VAR: "Job Variable"
     steps:
       # Step 1: Checkout the repository
       - name: Checkout repository
@@ -36,3 +37,7 @@ jobs:
           echo "Environment: $ENVIRONMENT"
           echo "App name: $APP_NAME"
           echo "Log level: $LOG_LEVEL"
+      - name: Step-level override
+        env:
+          JOB_ONLY_VAR: "overridden in this step"
+        run: echo "$JOB_ONLY_VAR"
