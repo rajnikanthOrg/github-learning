@@ -1,0 +1,87 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/steps-example.yml
+#
+# Workflow Name: steps-example
+#
+# Description:
+# This workflow demonstrates how to define and use steps within a GitHub Actions job.
+# Steps are the individual actions or commands that execute in sequence inside a job.
+#
+# Purpose:
+# - To show how each step performs a specific task within a job.
+# - To explain the use of "uses", "run", "with", "if", and environment variables.
+# - To illustrate both prebuilt and custom command steps.
+#
+# Key Concepts:
+#
+# 1. steps:
+#      - Steps are executed sequentially within a single job.
+#      - Each step runs in the same environment (workspace) and can share files.
+#
+# 2. uses:
+#      - Runs an external or prebuilt GitHub Action.
+#      - Format: owner/repo@version (for example, actions/checkout@v4).
+#
+# 3. run:
+#      - Executes shell commands directly on the runner.
+#      - Supports multi-line scripts using the pipe symbol (|).
+#
+# 4. with:
+#      - Defines input parameters for an action specified under "uses".
+#
+# 5. if:
+#      - Adds conditional logic to control whether a step runs.
+#      - Example: if: success(), failure(), or a custom expression.
+#
+# 6. env (per-step):
+#      - Defines environment variables only available to that specific step.
+#
+# Usage:
+# - Run this workflow manually.
+# - Observe how checkout, environment variables, conditional steps, and run scripts work together.
+#
+# ----------------------------------------------------------------------------------------
+
+name: steps-example
+
+on:
+  workflow_dispatch:            # Manual trigger for this workflow
+
+permissions:
+  contents: read
+
+jobs:
+  step-demo:
+    runs-on: ubuntu-latest      # Defines the runner OS environment
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Define environment variables for a single step
+      - name: Print environment details
+        env:
+          APP_VERSION: "1.0.0"
+          DEPLOY_ENV: "dev"
+        run: |
+          echo "Application Version: $APP_VERSION"
+          echo "Deployment Environment: $DEPLOY_ENV"
+
+      # Step 3: Run custom shell commands
+      - name: Run custom commands
+        run: |
+          echo "Listing files in the repository root:"
+          ls -la
+
+      # Step 4: Conditional step
+      - name: Run only on success
+        if: success()
+        run: echo "Previous steps succeeded. Continuing process..."
+
+      # Step 5: Example of using 'with' parameters
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
