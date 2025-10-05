@@ -1,0 +1,74 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/reusable-build.yml
+#
+# Workflow Name: reusable-build
+#
+# Description:
+# Demonstrates a reusable workflow that other workflows can call with inputs.
+# This pattern prevents duplication of common build, test, or deploy logic.
+#
+# Purpose:
+# - Provide a shared workflow that performs a standard set of tasks.
+# - Centralize common logic for multiple branches or repositories.
+#
+# Key Concepts:
+# 1) on.workflow_call:
+#      - Marks this workflow as reusable.
+#      - Defines optional inputs and secrets that callers can pass in.
+#
+# 2) Inputs:
+#      - Callers provide values through the "with:" block in their calling job.
+#
+# 3) Secrets:
+#      - Callers can forward secrets securely using "secrets:" mapping.
+#
+# 4) Reuse scope:
+#      - The workflow can be called from:
+#          a) Another workflow in the same repository, or
+#          b) A workflow in another repository (using owner/repo reference).
+#
+# Usage:
+# - This workflow alone does nothing until another workflow calls it.
+# - See the companion "caller" workflow below for usage.
+#
+# ----------------------------------------------------------------------------------------
+
+name: reusable-build
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: "Node.js version to use"
+        required: false
+        default: "20"
+        type: string
+      build-command:
+        description: "Build command to execute"
+        required: false
+        default: "npm run build"
+        type: string
+    secrets:
+      npm_token:
+        description: "Optional NPM token for private package installs"
+        required: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+        run: npm ci
+
+      - name: Run build
+        run: ${{ inputs.build-command }}
