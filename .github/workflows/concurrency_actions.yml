@@ -1,3 +1,40 @@
+# ----------------------------------------------------------------------------------------
+# Workflow Name: concurrency-example
+#
+# Description:
+# This GitHub Actions workflow demonstrates the use of the "concurrency" feature.
+# The concurrency setting ensures that multiple runs of the same workflow on the same
+# branch or reference do not overlap.
+#
+# Purpose:
+# - To prevent simultaneous workflow runs that might cause race conditions or resource conflicts.
+# - Commonly used in deployment, build, or release pipelines where only one run per branch
+#   should execute at any time.
+#
+# Key Configuration:
+# 1. concurrency:
+#      - group: Defines how runs are grouped together.
+#        Each group represents a unique key; only one run in that group executes at once.
+#      - cancel-in-progress: If true, any currently running workflow in the same group
+#        is canceled when a new one starts.
+#
+# 2. group: workflow-${{ github.ref }}
+#      - Uses the branch or tag reference as the concurrency group name.
+#        For example:
+#          - workflow-refs/heads/main
+#          - workflow-refs/heads/develop
+#
+# 3. cancel-in-progress: true
+#      - Ensures that if a new run starts (for the same branch),
+#        the previous one is automatically canceled.
+#
+# Usage:
+# - Trigger this workflow manually from the Actions tab.
+# - Modify the concurrency group expression to match your use case
+#   (for example, "deploy-${{ github.ref_name }}" or "test-${{ github.workflow }}").
+#
+# ----------------------------------------------------------------------------------------
+
 name: concurrency-example
 
 on:
