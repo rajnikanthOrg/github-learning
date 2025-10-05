@@ -1,0 +1,133 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/artifacts-example.yml
+#
+# Workflow Name: artifacts-example
+#
+# Description:
+# This workflow demonstrates how to work with GitHub Actions artifacts only
+# (no caching). It shows how to create files in one job, upload them as artifacts,
+# and then download and use those artifacts in a downstream job.
+#
+# Purpose:
+# - Persist build outputs, logs, or reports so they can be:
+#   1) Consumed by later jobs in the same workflow run, or
+#   2) Downloaded from the run summary for inspection.
+#
+# Key Concepts:
+# 1) Uploading artifacts (actions/upload-artifact@v4)
+#    - Use "name" to identify the artifact and "path" to specify files/directories.
+#    - "if-no-files-found" can be "error", "warn", or "ignore".
+#    - "retention-days" controls how long the artifact is kept server-side.
+#    - Artifacts are archived server-side; you do not need to zip them yourself.
+#
+# 2) Downloading artifacts (actions/download-artifact@v4)
+#    - Use "name" to fetch a specific artifact created earlier in the run.
+#    - Use "path" to choose where to place downloaded files.
+#    - You can download multiple artifacts by repeating this step or using patterns.
+#
+# 3) Job boundaries
+#    - Artifacts persist across jobs in the same workflow run, but not across runs.
+#    - Use "needs" to ensure the producer job completes before the consumer job starts.
+#
+# Usage:
+# - Manually trigger this workflow and observe:
+#   a) The "build" job creating and uploading artifacts.
+#   b) The "consume" job downloading and verifying those artifacts.
+#
+# Notes:
+# - Keep artifact size targeted (for example, only the "dist" directory, not the entire workspace).
+# - Use separate artifacts (distinct names) for different categories such as "web-dist" and "logs".
+# - For large or numerous files, consider splitting into multiple artifacts with clear names.
+#
+# ----------------------------------------------------------------------------------------
+
+name: artifacts-example
+
+on:
+  workflow_dispatch:            # Manual trigger for demonstration
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and upload artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Create example build outputs and logs to upload as artifacts
+      - name: Produce build outputs
+        run: |
+          mkdir -p dist
+          echo "example artifact content" > dist/manifest.txt
+          echo "build created at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> dist/manifest.txt
+
+          mkdir -p logs
+          echo "simulated build log line" > logs/build.log
+
+      # Upload the primary build artifact (the dist directory)
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: |
+            dist/**
+          if-no-files-found: error
+          retention-days: 7
+
+      # Upload logs as a separate artifact; allow the step even on failure paths
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            logs/**
+          if-no-files-found: warn
+          retention-days: 3
+
+  consume:
+    name: Download and use artifacts
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository (optional)
+        uses: actions/checkout@v4
+
+      # Download the build artifact
+      - name: Download web-dist
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: ./retrieved-dist
+
+      # Download the logs artifact
+      - name: Download build-logs
+        uses: actions/download-artifact@v4
+        with:
+          name: build-logs
+          path: ./retrieved-logs
+
+      # Verify the downloaded files exist and show their contents
+      - name: Verify and list retrieved files
+        run: |
+          echo "Listing ./retrieved-dist:"
+          ls -la ./retrieved-dist
+          echo
+          echo "Ensure manifest exists:"
+          test -f ./retrieved-dist/manifest.txt
+          echo "OK: manifest.txt found"
+
+          echo
+          echo "Listing ./retrieved-logs:"
+          ls -la ./retrieved-logs || true
+
+      # Example: Use the artifact content in a later step
+      - name: Read manifest
+        run: |
+          echo "Manifest content:"
+          cat ./retrieved-dist/manifest.txt
