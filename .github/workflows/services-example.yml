@@ -1,0 +1,129 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/services-example.yml
+#
+# Workflow Name: services-example
+#
+# Description:
+# Demonstrates how to run database or cache containers (PostgreSQL, Redis) alongside a job
+# using the "services" feature. Your steps can then connect to these services via localhost
+# and the published ports.
+#
+# Purpose:
+# - Provide ephemeral infra (DBs, queues, caches) for integration tests.
+# - Keep workflows self-contained without external dependencies.
+#
+# Key Concepts:
+# 1) services:
+#      - Declares one or more containers that start before job steps run.
+#      - Each service can define: image, env, ports, and Docker run "options".
+# 2) connectivity:
+#      - From steps in the same job, connect to services using "localhost:<published_port>".
+#      - GitHub Actions sets /etc/hosts entries so service names also resolve by name
+#        (e.g., "postgres" or "redis") inside the job VM, but using localhost:port is simplest.
+# 3) health and readiness:
+#      - Use container health checks (via "options") where possible.
+#      - Additionally, add a small wait loop in steps to ensure the service is ready.
+# 4) cleanup:
+#      - Services stop automatically when the job completes.
+#
+# Usage:
+# - Trigger manually from the Actions tab.
+# - The job spins up Postgres and Redis as services, then runs simple client commands
+#   to verify connectivity and basic operations.
+#
+# Notes:
+# - This example installs only client CLIs (psql, redis-cli) and runs harmless commands.
+# - For real tests, replace the echo/psql/redis-cli lines with your test runner.
+#
+# ----------------------------------------------------------------------------------------
+
+name: services-example
+
+on:
+  workflow_dispatch:            # Manual trigger for demonstration
+
+permissions:
+  contents: read
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: gha
+          POSTGRES_PASSWORD: gha_pw
+          POSTGRES_DB: appdb
+        ports:
+          - 5432:5432
+        # Add a Docker healthcheck so the service reports "healthy" when ready
+        options: >-
+          --health-cmd="pg_isready -U gha -d appdb || exit 1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=12
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        # Basic healthcheck for Redis
+        options: >-
+          --health-cmd="redis-cli ping || exit 1"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    steps:
+      - name: Checkout (optional)
+        uses: actions/checkout@v4
+
+      - name: Show Docker services state
+        run: |
+          docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+
+      # Wait for Postgres to be ready (defensive wait in addition to healthcheck)
+      - name: Install Postgres client and wait for DB
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client
+          for i in {1..30}; do
+            if PGPASSWORD=gha_pw psql -h localhost -U gha -d appdb -c "select 1" >/dev/null 2>&1; then
+              echo "Postgres is ready."
+              break
+            fi
+            echo "Waiting for Postgres... ($i/30)"
+            sleep 2
+          done
+
+      - name: Create table and insert data (Postgres)
+        run: |
+          PGPASSWORD=gha_pw psql -h localhost -U gha -d appdb -v ON_ERROR_STOP=1 <<'SQL'
+          create table if not exists demo(id serial primary key, note text not null);
+          insert into demo(note) values ('hello from actions');
+          select count(*) as rowcount from demo;
+          SQL
+
+      # Wait for Redis to be ready (defensive wait in addition to healthcheck)
+      - name: Install redis-tools and verify Redis
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y redis-tools
+          for i in {1..30}; do
+            if redis-cli -h localhost ping | grep -qi PONG; then
+              echo "Redis is ready."
+              break
+            fi
+            echo "Waiting for Redis... ($i/30)"
+            sleep 2
+          done
+          redis-cli -h localhost set demo "hello"
+          redis-cli -h localhost get demo
+
+      - name: Run your tests here
+        run: |
+          echo "Replace this section with your integration test runner."
+          echo "Postgres DSN: postgres://gha:gha_pw@localhost:5432/appdb"
+          echo "Redis: localhost:6379"
