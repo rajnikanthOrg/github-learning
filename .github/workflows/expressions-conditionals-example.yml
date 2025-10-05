@@ -1,0 +1,82 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/expressions-conditionals-example.yml
+#
+# Workflow Name: expressions-conditionals-example
+#
+# Description:
+# This workflow demonstrates how to use expressions and conditionals in GitHub Actions.
+# Expressions control dynamic behavior, enable conditional logic, and access workflow context data.
+#
+# Purpose:
+# - To show how expressions (`${{ }}`) are used to reference data and evaluate logic.
+# - To demonstrate conditional execution using the `if:` keyword at the job or step level.
+# - To explain how context objects like `github`, `env`, and `jobs` provide runtime information.
+#
+# Key Concepts:
+#
+# 1. Expressions:
+#      - Defined using the syntax: ${{ <expression> }}
+#      - Used for referencing variables, contexts, and evaluating conditions.
+#      - Common examples:
+#          - ${{ github.ref }}            -> Current branch or tag reference
+#          - ${{ github.actor }}          -> Username that triggered the workflow
+#          - ${{ env.VARIABLE_NAME }}     -> Access an environment variable
+#          - ${{ success() }} or ${{ failure() }} -> Status functions
+#
+# 2. Conditionals:
+#      - Applied using the `if:` key in jobs or steps.
+#      - Determines whether that job or step should execute.
+#      - Supports logical operators: ==, !=, &&, ||.
+#      - Supports functions like: success(), failure(), always(), cancelled().
+#
+# 3. Contexts:
+#      - github: Provides information about the event, repository, and user.
+#      - env: Access environment variables.
+#      - jobs: Contains outputs from previous jobs.
+#      - secrets: Provides access to repository or organization secrets.
+#
+# Usage:
+# - Run this workflow manually from the Actions tab.
+# - Observe conditional logic controlling which steps execute.
+#
+# ----------------------------------------------------------------------------------------
+
+name: expressions-conditionals-example
+
+on:
+  workflow_dispatch:          # Manual trigger for testing expressions
+
+permissions:
+  contents: read
+
+env:
+  DEPLOY_ENV: "dev"
+  SHOULD_RUN: "true"
+
+jobs:
+  conditional-demo:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Display basic GitHub context values
+      - name: Show context information
+        run: |
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch/Ref: ${{ github.ref }}"
+
+      # Step 2: Conditional execution based on environment variable
+      - name: Conditional step (runs only if SHOULD_RUN is true)
+        if: ${{ env.SHOULD_RUN == 'true' }}
+        run: |
+          echo "Condition met: SHOULD_RUN is true."
+
+      # Step 3: Conditional failure path
+      - name: Run only if previous step fails
+        if: failure()
+        run: echo "Previous step failed, running recovery actions..."
+
+      # Step 4: Step that always runs, regardless of previous outcomes
+      - name: Always execute this step
+        if: always()
+        run: echo "This step always executes."
