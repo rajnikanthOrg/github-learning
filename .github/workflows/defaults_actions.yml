@@ -1,0 +1,27 @@
+name: defaults-example
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  APP_ENV: dev
+
+defaults:
+  run:
+    shell: bash               # use bash for all run steps (default on Ubuntu)
+    working-directory: ./src  # set default working directory for all runs
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Print working directory
+        run: pwd               # will run inside ./src because of defaults.run
+
+      - name: Show environment
+        run: |
+          echo 'Environment: $APP_ENV'
