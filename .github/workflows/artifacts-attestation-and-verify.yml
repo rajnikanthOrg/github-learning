@@ -1,0 +1,111 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/artifacts-attestation-and-verify.yml
+#
+# Workflow Name: artifacts-attestation-and-verify
+#
+# Description:
+# Creates a build output, generates a signed provenance attestation for it using
+# GitHub Artifact Attestations, and verifies that attestation with the GitHub CLI.
+#
+# What this demonstrates:
+# - Producing any file(s) as "subjects" to attest (here: ./dist/manifest.txt).
+# - Using actions/attest-build-provenance@v1 to generate an attestation that is
+#   stored by GitHub and signed via Sigstore with a short-lived OIDC certificate.
+# - Verifying the artifact’s integrity and provenance with `gh attestation verify`.
+#
+# Why this matters:
+# - Attestations establish provenance (who/what built an artifact, and how).
+# - They are cryptographically verifiable off-repo (supply-chain security).
+#
+# Key requirements:
+# - permissions:
+#     id-token: write      -> to obtain an OIDC token for the signing certificate
+#     attestations: write  -> to persist the attestation in GitHub
+#     contents: read       -> standard repo read for the action
+#
+# How to run:
+# - Push this file to .github/workflows/ and run it manually from the Actions tab.
+# - The workflow prints verification results in the logs of the "verify" job.
+#
+# References:
+# - Setup & usage of Artifact Attestations (GitHub Docs). 
+# - Action: actions/attest-build-provenance (subject-path for files).
+# - Verify via GitHub CLI: `gh attestation verify`.
+#
+# ----------------------------------------------------------------------------------------
+
+name: artifacts-attestation-and-verify
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  build-and-attest:
+    name: Build artifact and generate attestation
+    runs-on: ubuntu-latest
+
+    outputs:
+      artifact_path: ${{ steps.make.outputs.path }}
+
+    steps:
+      - name: Checkout (optional)
+        uses: actions/checkout@v4
+
+      # Produce a deterministic example artifact
+      - name: Create example artifact
+        id: make
+        run: |
+          mkdir -p dist
+          printf "built at: %s\n" "$(date -u +'%Y-%m-%d %H:%M:%S UTC')" > dist/manifest.txt
+          echo "path=dist/manifest.txt" >> "$GITHUB_OUTPUT"
+
+      # Generate a signed provenance attestation for the file we just built.
+      # This stores an attestation with GitHub that binds the artifact digest
+      # to a SLSA provenance predicate, signed via Sigstore.
+      - name: Generate artifact attestation (provenance)
+        uses: actions/attest-build-provenance@v1
+        with:
+          # You can pass one file or a glob. Here we attest just the manifest.
+          subject-path: ${{ steps.make.outputs.path }}
+
+      # Optionally keep the artifact as an Actions artifact for convenience
+      - name: Upload artifact (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-manifest
+          path: ${{ steps.make.outputs.path }}
+
+  verify:
+    name: Verify attestation with GitHub CLI
+    needs: build-and-attest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifact produced earlier (optional but convenient)
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-manifest
+          path: ./verify
+
+      - name: Show files to be verified
+        run: ls -la ./verify
+
+      # Verify the artifact’s attestation. The --repo flag binds verification
+      # to this repository as the signer’s identity. For even stronger checks,
+      # also pass --signer-workflow pointing to this workflow file path.
+      - name: Verify attestation using gh CLI
+        run: |
+          # Basic verification (repo-level identity):
+          gh attestation verify ./verify/manifest.txt \
+            --repo "${GITHUB_REPOSITORY}"
+
+          # Stronger verification: assert the workflow file that produced the attestation
+          # (adjust the path if you rename this file)
+          gh attestation verify ./verify/manifest.txt \
+            --repo "${GITHUB_REPOSITORY}" \
+            --signer-workflow ".github/workflows/artifacts-attestation-and-verify.yml"
