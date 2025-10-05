@@ -1,0 +1,78 @@
+# ----------------------------------------------------------------------------------------
+# File: .github/workflows/oidc-azure-example.yml
+#
+# Workflow Name: oidc-azure-example
+#
+# Description:
+# Demonstrates OpenID Connect (OIDC) authentication from GitHub Actions to Azure without
+# storing cloud credentials as long-lived secrets. The workflow requests a short-lived
+# identity token from GitHub, Azure validates it via a Federated Credential on a
+# Microsoft Entra application (App Registration), and issues an access token.
+#
+# Purpose:
+# - Replace cloud client secrets with short-lived tokens via OIDC.
+# - Log in to Azure using azure/login@v2 with id-token: write permissions.
+# - Run a harmless az command to verify auth.
+#
+# Prerequisites (one-time Azure setup):
+# 1) Create or use an existing App Registration (Client/Application ID).
+# 2) Assign it a role on the target subscription/resource group (e.g., Reader).
+# 3) Add a Federated Credential on the App Registration with:
+#    - Issuer: https://token.actions.githubusercontent.com
+#    - Subject: repo:<OWNER>/<REPO>:ref:refs/heads/<BRANCH>  (or a wildcard)
+#    - Audience: api://AzureADTokenExchange
+# 4) Collect:
+#    - AZURE_CLIENT_ID: The App (client) ID of the App Registration.
+#    - AZURE_TENANT_ID: Your Entra tenant ID.
+#    - AZURE_SUBSCRIPTION_ID: Subscription to target.
+# No client secret is required when using OIDC.
+#
+# Key Concepts:
+# - permissions.id-token: write   -> allows the workflow to request an OIDC token.
+# - azure/login@v2                -> exchanges the GitHub OIDC token for an Azure token.
+# - environment protection (optional) can gate which branches can assume the role.
+#
+# Usage:
+# - Update the "with:" values for azure/login with your IDs.
+# - Run manually via workflow_dispatch and review the logs from the login and az command.
+#
+# Notes:
+# - If the federated credential subject does not match the triggering ref, login will fail.
+# - Use environment protection rules to limit who can assume cloud roles from CI.
+# - This example performs a read-only az command for demonstration.
+#
+# ----------------------------------------------------------------------------------------
+
+name: oidc-azure-example
+
+on:
+  workflow_dispatch:            # Manual trigger for learning/testing
+
+permissions:
+  contents: read
+  id-token: write               # Required for OIDC token issuance
+
+jobs:
+  oidc-login:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (optional)
+        uses: actions/checkout@v4
+
+      # Log in to Azure using OIDC (no client secret needed)
+      - name: Azure login via OIDC
+        uses: azure/login@v2
+        with:
+          # Replace these with your actual IDs from Azure
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      # Run a harmless az command to confirm authentication works
+      - name: Verify Azure context
+        run: |
+          az account show --output table || {
+            echo "Azure login appears not configured (check federated credential and IDs)."
+            exit 1
+          }
