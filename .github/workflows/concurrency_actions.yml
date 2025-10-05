@@ -1,0 +1,20 @@
+name: concurrency-example
+
+on:
+  workflow_dispatch:        # Allows manual execution from the Actions tab
+
+permissions:
+  contents: read            # Grants read access to repository contents
+
+# Prevents overlapping runs of the same workflow on the same branch
+concurrency:
+  group: workflow-${{ github.ref }}   # Unique group per branch (e.g., refs/heads/main)
+  cancel-in-progress: true            # Cancel any currently running workflow in this group when a new one starts
+
+jobs:
+  test:
+    runs-on: ubuntu-latest            # Use the latest Ubuntu runner
+
+    steps:
+      - name: Display current branch
+        run: echo "Running workflow for ${{ github.ref }}"
