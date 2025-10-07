@@ -1,0 +1,70 @@
+# ----------------------------------------------------------------------------------------
+# Workflow Name: jobs-example
+#
+# Description:
+# This workflow demonstrates how to define and structure jobs in a GitHub Actions workflow.
+# Jobs represent independent units of work that can run sequentially or in parallel.
+# Each job runs in its own virtual environment (runner) and can contain multiple steps.
+#
+# Purpose:
+# - To organize tasks into separate jobs for better control, scalability, and clarity.
+# - To define execution environments (for example, Ubuntu, Windows, macOS).
+# - To allow dependencies between jobs using the "needs" keyword.
+#
+# Key Concepts:
+# 1. jobs:
+#      - A mapping of job identifiers to job definitions.
+#      - Each job must define a runner using "runs-on".
+#
+# 2. runs-on:
+#      - Specifies the type of GitHub-hosted or self-hosted runner (e.g., ubuntu-latest, windows-latest).
+#
+# 3. steps:
+#      - A sequence of individual tasks inside a job.
+#      - Each step runs in the same environment as the job.
+#      - Steps can use prebuilt actions (via "uses") or custom shell commands (via "run").
+#
+# 4. needs (optional):
+#      - Defines dependencies between jobs.
+#      - A job that "needs" another will wait for it to complete successfully before starting.
+#
+# 5. strategy (optional):
+#      - Allows matrix builds (e.g., run the same job on multiple versions or platforms).
+#
+# Usage:
+# - Trigger this workflow manually.
+# - Observe how multiple jobs can run sequentially or in parallel.
+#
+# ----------------------------------------------------------------------------------------
+
+name: jobs-example
+
+on:
+  workflow_dispatch:          # Allows manual execution
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest     # Runner for this job
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build step
+        run: echo "Building project..."
+
+  test:
+    needs: build               # Wait for 'build' job to complete
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run unit tests
+        run: echo "Running tests..."
+
+  deploy:
+    needs: test                # Wait for 'test' job to complete
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment step
+        run: echo "Deploying application..."
